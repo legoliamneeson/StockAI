@@ -1,12 +1,5 @@
 ﻿import subprocess
 import sys
-import tensorflow as tf
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-from sklearn.preprocessing import MinMaxScaler
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense, Dropout
 
 # Function to install pip if not already installed
 def install_pip():
@@ -35,36 +28,13 @@ install_pip()
 # Install required packages from requirements.txt
 install_requirements('requirements.txt')
 
-# Function to verify GPU availability
-def verify_gpu_availability():
-    gpus = tf.config.experimental.list_physical_devices('GPU')
-    if gpus:
-        print("GPUs detected:")
-        for gpu in gpus:
-            print("  -", gpu)
-    else:
-        print("No GPUs detected.")
-
-# Call the function to verify GPU availability
-verify_gpu_availability()
-
-# Function to configure TensorFlow session for GPU
-def configure_gpu_memory():
-    # Get the list of available GPUs
-    gpus = tf.config.experimental.list_physical_devices('GPU')
-    if gpus:
-        try:
-            # Restrict TensorFlow to allocate only as much GPU memory as needed
-            for gpu in gpus:
-                tf.config.experimental.set_memory_growth(gpu, True)
-            print("GPU memory growth is configured successfully!")
-        except RuntimeError as e:
-            print(e)
-    else:
-        print("No GPUs available, running on CPU.")
-
-# Call the function to configure GPU memory
-configure_gpu_memory()
+# Now import the necessary packages
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import MinMaxScaler
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import LSTM, Dense, Dropout
 
 # Load the stock data
 def load_data(stock_file):
@@ -121,14 +91,14 @@ def predict_future(model, data, scaler, seq_length, future_steps):
 # Main function
 def main():
     # Load and preprocess the data
-    df = load_data("C:/Users/Cole/Downloads/NVDA.csv")
+    df = load_data("/root/StockAI/SPY.csv")
     data, scaler = preprocess_data(df)
 
     # Define hyperparameters
     seq_length = 245
     future_steps = 30
-    epochs = 10000  # Increase the number of epochs
-    batch_size = 128
+    epochs = 3500  # Increase the number of epochs
+    batch_size = 64
 
     # Create sequences for training
     X, y = create_sequences(data, seq_length)
