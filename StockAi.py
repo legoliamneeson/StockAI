@@ -8,6 +8,8 @@ from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.layers import LSTM, Dense, Dropout
 from sklearn.model_selection import train_test_split
 import os
+from tensorflow.keras.callbacks import EarlyStopping
+from sklearn.metrics import mean_squared_error
 
 # Function to install pip if not already installed
 def install_pip():
@@ -36,20 +38,19 @@ install_pip()
 # Install required packages from requirements.txt
 install_requirements('requirements.txt')
 
+
 def load_data(stock_file):
     df = pd.read_csv(stock_file)
     return df
 
 def preprocess_data(df):
-    df['Daily_Return'] = (df['Close'] / df['Close'].shift(1)) - 1
-    df = df.dropna()  
-    df['Close'].fillna(method='bfill', inplace=True)
-    df['Close'].fillna(method='ffill', inplace=True)
-    df['Daily_Return'].fillna(method='bfill', inplace=True)
-    df['Daily_Return'].fillna(method='ffill', inplace=True)
-
+    # Interpolate missing values
+    df.interpolate(method='linear', inplace=True)
+    
+    # Scale the data
     scaler = MinMaxScaler(feature_range=(0, 1))
-    scaled_data = scaler.fit_transform(df['Close'].values.reshape(-1, 1))
+    scaled_data = scaler.fit_transform(df[['Close']].values)
+    
     return scaled_data, scaler
 
 def create_sequences(data, seq_length):
@@ -61,18 +62,18 @@ def create_sequences(data, seq_length):
 
 def build_model(seq_length):
     model = Sequential()
-    model.add(LSTM(units=100, return_sequences=True, input_shape=(seq_length, 1)))
-    model.add(Dropout(0.2))
-    model.add(LSTM(units=100, return_sequences=True))
-    model.add(Dropout(0.2))
-    model.add(LSTM(units=100))
-    model.add(Dropout(0.2))
+    model.add(LSTM(units=128, return_sequences=True, input_shape=(seq_length, 1)))
+    model.add(Dropout(0.3))
+    model.add(LSTM(units=128, return_sequences=True))
+    model.add(Dropout(0.3))
+    model.add(LSTM(units=128))
+    model.add(Dropout(0.3))
     model.add(Dense(units=1))
     model.compile(optimizer='adam', loss='mean_squared_error')
     return model
 
-def train_model(model, X_train, y_train, X_val, y_val, epochs, batch_size):
-    history = model.fit(X_train, y_train, epochs=epochs, batch_size=batch_size, validation_data=(X_val, y_val), verbose=2)
+def train_model(model, X_train, y_train, X_val, y_val, epochs, batch_size, callbacks):
+    history = model.fit(X_train, y_train, epochs=epochs, batch_size=batch_size, validation_data=(X_val, y_val), verbose=2, callbacks=callbacks)
     return history
 
 def predict_future(model, data, scaler, seq_length, future_steps):
@@ -115,29 +116,38 @@ def load_or_build_model(seq_length, filename):
 
 def main():
     df = load_data("NVDA.csv")
+    trainName = "NVDAtrain.h5"
     data, scaler = preprocess_data(df)
-
-    seq_length = 145
-    epochs = 150
-    batch_size = 128
-    future_steps = 30
+    seq_length = 315
+    epochs = 1000
+    batch_size = 256
+    future_steps = 5
 
     X, y = create_sequences(data, seq_length)
 
     X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, shuffle=False)
 
-    model = load_or_build_model(seq_length, "pretrained_lstm_model.h5")
+    # Recreate the model instance
+    model = build_model(seq_length)
+    
+    # Define early stopping criteria
+    early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
 
-    history = train_model(model, X_train, y_train, X_val, y_val, epochs, batch_size)  # Provide epochs and batch_size arguments here
+    history = train_model(model, X_train, y_train, X_val, y_val, epochs, batch_size, callbacks=[early_stopping])
 
     # Save model
-    model.save("pretrained_lstm_model.h5")
+    model.save(trainName)
 
     plot_loss(history)
 
     predictions = predict_future(model, data, scaler, seq_length, future_steps)
 
     plot_predictions(df, predictions, future_steps)
+
+    # Calculate MSE on validation data
+    y_val_pred = model.predict(X_val)
+    mse = mean_squared_error(y_val, y_val_pred)
+    print("Validation MSE:", mse)
 
 if __name__ == "__main__":
     main()
