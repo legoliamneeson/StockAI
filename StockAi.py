@@ -78,19 +78,28 @@ def train_model(model, X_train, y_train, X_val, y_val, epochs, batch_size, callb
 
 def predict_future(model, data, scaler, seq_length, future_steps):
     predictions = []
-    current_sequence = data[-seq_length:].reshape(1, seq_length, 1)
+
+    # Adding last x and y point of the stock history
+    last_x_point = data[-seq_length:]
+    last_y_point = data[-1]
 
     for i in range(future_steps):
+        if i == 0:
+            current_sequence = last_x_point.reshape(1, seq_length, 1)
+        else:
+            current_sequence = np.append(current_sequence[:, 1:, :], [[next_pred]], axis=1)
+
         next_pred = model.predict(current_sequence)[0]
         predictions.append(next_pred)
-        current_sequence = np.append(current_sequence[:,1:,:], [[next_pred]], axis=1)
 
-    predictions = scaler.inverse_transform(predictions)
+    predictions = np.insert(predictions, 0, last_y_point)  # Inserting the last y point at the start
+    predictions = scaler.inverse_transform(predictions.reshape(-1, 1)).flatten()
+    
     return predictions
 
 def plot_predictions(df, predictions, future_steps):
     plt.plot(df['Date'], df['Close'], label='Actual Stock Price')
-    plt.plot(np.arange(len(df)-1,len(df)-1+future_steps), predictions, label='Predicted Stock Price', color='r')
+    plt.plot(np.arange(len(df)-1,len(df)-1+future_steps+1), predictions, label='Predicted Stock Price', color='r')
     plt.xlabel('Date')
     plt.ylabel('Stock Price')
     plt.title('Stock Price Prediction')
@@ -115,13 +124,13 @@ def load_or_build_model(seq_length, filename):
         return model
 
 def main():
-    df = load_data("NVDA.csv")
-    trainName = "NVDAtrain.h5"
+    df = load_data("TSLA.csv")
+    trainName = "TSLAtrain.h5"
     data, scaler = preprocess_data(df)
-    seq_length = 315
+    seq_length = 50
     epochs = 1000
     batch_size = 256
-    future_steps = 5
+    future_steps = 30
 
     X, y = create_sequences(data, seq_length)
 
