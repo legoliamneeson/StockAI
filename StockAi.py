@@ -1,15 +1,6 @@
 import subprocess
 import sys
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-from sklearn.preprocessing import MinMaxScaler
-from tensorflow.keras.models import Sequential, load_model
-from tensorflow.keras.layers import LSTM, Dense, Dropout
-from sklearn.model_selection import train_test_split
-import os
-from tensorflow.keras.callbacks import EarlyStopping
-from sklearn.metrics import mean_squared_error
+
 
 # Function to install pip if not already installed
 def install_pip():
@@ -37,6 +28,16 @@ install_pip()
 
 # Install required packages from requirements.txt
 install_requirements('requirements.txt')
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import MinMaxScaler
+from tensorflow.keras.models import Sequential, load_model
+from tensorflow.keras.layers import LSTM, Dense, Dropout
+from sklearn.model_selection import train_test_split
+import os
+from tensorflow.keras.callbacks import EarlyStopping
+from sklearn.metrics import mean_squared_error
 
 
 def load_data(stock_file):
@@ -124,13 +125,13 @@ def load_or_build_model(seq_length, filename):
         return model
 
 def main():
-    df = load_data("TSLA.csv")
-    trainName = "TSLAtrain.h5"
+    df = load_data ("nvda.csv")
+    trainName = "nvdatrain.h5"
     data, scaler = preprocess_data(df)
     seq_length = 50
     epochs = 1000
     batch_size = 256
-    future_steps = 30
+    future_steps =1
 
     X, y = create_sequences(data, seq_length)
 
