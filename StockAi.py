@@ -28,6 +28,7 @@ install_pip()
 
 # Install required packages from requirements.txt
 install_requirements('requirements.txt')
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -38,7 +39,6 @@ from sklearn.model_selection import train_test_split
 import os
 from tensorflow.keras.callbacks import EarlyStopping
 from sklearn.metrics import mean_squared_error
-
 
 def load_data(stock_file):
     df = pd.read_csv(stock_file)
@@ -98,8 +98,11 @@ def predict_future(model, data, scaler, seq_length, future_steps):
     
     return predictions
 
-def plot_predictions(df, predictions, future_steps):
+def plot_predictions(df, predictions, future_steps,predictions2,future_steps2,predictions3,future_steps3,predictions4,future_steps4):
     plt.plot(df['Date'], df['Close'], label='Actual Stock Price')
+    plt.plot(np.arange(len(df)-1,len(df)-1+future_steps4+1), predictions4, label='Predicted Stock Price4', color='c')
+    plt.plot(np.arange(len(df)-1,len(df)-1+future_steps3+1), predictions3, label='Predicted Stock Price3', color='m')
+    plt.plot(np.arange(len(df)-1,len(df)-1+future_steps2+1), predictions2, label='Predicted Stock Price2', color='g')
     plt.plot(np.arange(len(df)-1,len(df)-1+future_steps+1), predictions, label='Predicted Stock Price', color='r')
     plt.xlabel('Date')
     plt.ylabel('Stock Price')
@@ -125,13 +128,16 @@ def load_or_build_model(seq_length, filename):
         return model
 
 def main():
-    df = load_data ("nvda.csv")
-    trainName = "nvdatrain.h5"
+    df = load_data("axp.csv")
+    trainName = "axptrain.h5"
     data, scaler = preprocess_data(df)
     seq_length = 50
     epochs = 1000
     batch_size = 256
-    future_steps =1
+    future_steps = 1
+    future_steps2 = 7
+    future_steps3 = 20
+    future_steps4 = 30
 
     X, y = create_sequences(data, seq_length)
 
@@ -151,9 +157,10 @@ def main():
     plot_loss(history)
 
     predictions = predict_future(model, data, scaler, seq_length, future_steps)
-
-    plot_predictions(df, predictions, future_steps)
-
+    predictions2 = predict_future(model, data, scaler, seq_length, future_steps2)
+    predictions3 = predict_future(model, data, scaler, seq_length, future_steps3)
+    predictions4 = predict_future(model, data, scaler, seq_length, future_steps4)
+    plot_predictions(df, predictions, future_steps,predictions2,future_steps2,predictions3,future_steps3,predictions4,future_steps4)
     # Calculate MSE on validation data
     y_val_pred = model.predict(X_val)
     mse = mean_squared_error(y_val, y_val_pred)
