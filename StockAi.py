@@ -128,17 +128,16 @@ def load_or_build_model(seq_length, filename):
         return model
 
 def main():
-    df = load_data("axp.csv")
-    trainName = "axptrain.h5"
+    df = load_data("SPX.csv")
+    trainName = "SPXtrain.h5"
     data, scaler = preprocess_data(df)
     seq_length = 50
     epochs = 1000
     batch_size = 256
     future_steps = 1
-    future_steps2 = 7
-    future_steps3 = 20
-    future_steps4 = 30
-
+    future_steps2 = 5
+    future_steps3 = 10
+    future_steps4 = 15
     X, y = create_sequences(data, seq_length)
 
     X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, shuffle=False)
