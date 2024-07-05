@@ -2,6 +2,7 @@ import subprocess
 import sys
 
 
+
 # Function to install pip if not already installed
 def install_pip():
     try:
@@ -29,6 +30,16 @@ install_pip()
 # Install required packages from requirements.txt
 install_requirements('requirements.txt')
 
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import MinMaxScaler
+from tensorflow.keras.models import Sequential, load_model
+from tensorflow.keras.layers import LSTM, Dense, Dropout
+from sklearn.model_selection import train_test_split
+import os
+from tensorflow.keras.callbacks import EarlyStopping
+from sklearn.metrics import mean_squared_error
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
